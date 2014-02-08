@@ -1,0 +1,1 @@
+A rails application hack using the Square Connect API to track Girl Scout purchases.
