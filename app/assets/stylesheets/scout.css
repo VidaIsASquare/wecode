@@ -1,0 +1,30 @@
+/* COLOR SCHEME 
+ * 
+ * dark green : #007031;
+ * mint green : #4ED98A;
+ * gold: #F2B705;
+ * red-orange: #F24535;
+ */
+
+ html{
+ 	background: #4ED98A;
+ 	color: #007031;
+ }
+
+.header {
+	width:100%;
+	height:200px;
+	background:white;
+	display: block;
+}
+
+.header .logo{
+	background: url('img/scoutlogo.jpg') 0 0 no-repeat;
+	display: block;
+	height:200px;
+	width:200px;
+}
+
+#leaderboard {
+	background: #fff;
+}
