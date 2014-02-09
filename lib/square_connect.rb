@@ -1,4 +1,5 @@
 require 'json'
+require 'pp'
 require 'net/http'
 require 'net/https'
 
@@ -13,7 +14,7 @@ def creator_token_payment_amount_hash(begin_time = "2014-02-01", end_time = "201
 
   payments.each do |payment|
     # TODO(vida): Is the creator token empty if it's the merchant account?
-    payment_amount = payment['total_collected_money']['amount']
+    payment_amount = payment['total_collected_money']['amount'] + payment['refunded_money']['amount']
     creator_token_amount_hash[payment['creator_id']] += payment_amount
     creator_token_amount_hash["Total"] += payment_amount
   end
@@ -29,6 +30,10 @@ def itemization_name_quantity_hash(creator_id = nil, begin_time = "2014-02-01", 
 
   payments.each do |payment|
     if creator_id.present? and creator_id != payment['creator_id']
+      next
+    end
+
+    if payment['refunds'].size > 0
       next
     end
 
