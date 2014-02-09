@@ -1,6 +1,8 @@
 Wecode::Application.routes.draw do
   root 'scouts#index'
 
+  get 'cookie_counts' => "scouts#cookie_counts"
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
