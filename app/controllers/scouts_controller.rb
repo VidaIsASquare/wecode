@@ -6,8 +6,7 @@ class ScoutsController < ApplicationController
     puts @creator_token_payment_amount_hash
   end
 
-  def cookies
+  def cookie_counts
     @itemization_name_quantity_hash = itemization_name_quantity_hash(params[:creator_id])
-    puts @itemization_name_quantity_hash
   end
 end
