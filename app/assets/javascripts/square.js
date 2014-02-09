@@ -20,8 +20,6 @@ var square = {
 		.fail(function() {
 			console.log("error");
 		});
-
-		return returning;
 	},
 		
 	getCookieCount:  function(creator_id) {
@@ -41,26 +39,10 @@ var square = {
 		
 	}, 
 
-	sumByMerchant: function(merchant,transactionAmt){
-		if (!collectByIds.hasOwnProperty(merchant)){
-			collectByIds[merchant] = transactionAmt;
-		}else {
-			collectByIds[merchant] += transactionAmt;
-		}
-
-		return collectByIds; 
-	},
 	init: function() {
 		// get the data
 		square.getPaymentTotals();
-		// square.getCookieCount();
-
-		// iterate over it
-		// $.each(response, function(){
-		// 	var merchant = this["merchant_id"];
-		// 	var transactionAmt = this["net_total_money"]["amount"]; 
-		// 	square.sumByMerchant(merchant, transactionAmt);
-		// });			
+		
 	}
 
 }; 
@@ -100,20 +82,17 @@ var charts = {
 			drilldownSeries.id = scoutID.toLowerCase();
 			drilldownSeries.data.push([key, data[key]]);
 		}
-		// console.log(charts.drilldowns);
 
 		charts.drilldowns.push(drilldownSeries);
 
 		charts.count++;
 
 		if (charts.count == charts.working.length){
+			//init the leaderboard
 			this.leaderboard();
 		}
-		//init the leaderboard
 	},
 	leaderboard: function() {
-		// init the leaderboard 
-		var labels = ['Jane', 'Mary', 'Alice'];
 		var series = [{
 					name: 'total sales made',
 					color: chartOptions.color.mint,
@@ -150,13 +129,6 @@ var charts = {
 				series: charts.drilldowns
 			}
 	    });
-
-	// console.log(labels);
-	// console.log(datasets);
-	},
-
-	init: function() {
-		// this.leaderboard();
 	}
 }
 
@@ -164,7 +136,6 @@ $(document).ready(function(){
 
 	// init that shit! 
 	square.init();
-	charts.init();
 
 	return {
 		charts:charts,
