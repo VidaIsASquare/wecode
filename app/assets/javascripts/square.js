@@ -7,13 +7,38 @@ var chartOptions = {
 	}
 };
 
-var collectByIds={};
-
 var square = {
-	getData:  function() {
-		// Currently hardcoding a response, but this should be hitting the service to get...whatever. 
-		var response=[{"id":"A4M1EZVXGW9DT","merchant_id":"1Q5ZG47GZ44T1","creator_id":"1Q5ZG47GZ44T1","created_at":"2014-02-08T19:55:26Z","inclusive_tax_money":{"amount":0,"currency_code":"USD"},"additive_tax_money":{"amount":0,"currency_code":"USD"},"tax_money":{"amount":0,"currency_code":"USD"},"tip_money":{"amount":0,"currency_code":"USD"},"discount_money":{"amount":0,"currency_code":"USD"},"total_collected_money":{"amount":1,"currency_code":"USD"},"processing_fee_money":{"amount":0,"currency_code":"USD"},"net_total_money":{"amount":1,"currency_code":"USD"},"refunded_money":{"amount":0,"currency_code":"USD"},"inclusive_tax":[],"additive_tax":[],"tender":[{"type":"CASH","name":"Cash","total_money":{"amount":1,"currency_code":"USD"},"tendered_money":{"amount":100,"currency_code":"USD"},"change_back_money":{"amount":99,"currency_code":"USD"}}],"refunds":[],"itemizations":[]},{"id":"061N6K29RM0BN","merchant_id":"1Q5ZG47GZ44T1","creator_id":"1Q5ZG47GZ44T1","created_at":"2014-02-08T21:08:12Z","inclusive_tax_money":{"amount":0,"currency_code":"USD"},"additive_tax_money":{"amount":0,"currency_code":"USD"},"tax_money":{"amount":0,"currency_code":"USD"},"tip_money":{"amount":0,"currency_code":"USD"},"discount_money":{"amount":0,"currency_code":"USD"},"total_collected_money":{"amount":500,"currency_code":"USD"},"processing_fee_money":{"amount":0,"currency_code":"USD"},"net_total_money":{"amount":500,"currency_code":"USD"},"refunded_money":{"amount":0,"currency_code":"USD"},"inclusive_tax":[],"additive_tax":[],"tender":[{"type":"CASH","name":"Cash","total_money":{"amount":500,"currency_code":"USD"},"tendered_money":{"amount":500,"currency_code":"USD"}}],"refunds":[],"itemizations":[]}];
-		return response; 
+	getPaymentTotals:  function() {
+		var returning; 
+
+		$.ajax({
+			url: "/payment_totals",
+		})
+		.done(function(response) {
+			charts.setupSeries(response);
+		})
+		.fail(function() {
+			console.log("error");
+		});
+
+		return returning;
+	},
+		
+	getCookieCount:  function(creator_id) {
+
+		$.ajax({
+			url: "/cookie_counts",
+			data: {
+				creator_id: creator_id || ""
+			}
+		})
+		.done(function(response) {
+			charts.setupDrilldowns(creator_id, response);			
+		})
+		.fail(function() {
+			console.log("error");
+		});
+		
 	}, 
 
 	sumByMerchant: function(merchant,transactionAmt){
@@ -27,52 +52,73 @@ var square = {
 	},
 	init: function() {
 		// get the data
-		var response = square.getData();
+		square.getPaymentTotals();
+		// square.getCookieCount();
 
 		// iterate over it
-		$.each(response, function(){
-			var merchant = this["merchant_id"];
-			var transactionAmt = this["net_total_money"]["amount"]; 
-			square.sumByMerchant(merchant, transactionAmt);
-		});			
+		// $.each(response, function(){
+		// 	var merchant = this["merchant_id"];
+		// 	var transactionAmt = this["net_total_money"]["amount"]; 
+		// 	square.sumByMerchant(merchant, transactionAmt);
+		// });			
 	}
 
 }; 
 
 var charts = {
-	setScale: function() {
+	working: [],
+	drilldowns: [],
+	count: 0,
+	setupSeries: function(data){
+		// {F9T1S0T9Q5FBC: 900, Total: 4100, 3KMJ1RAT41ZJT: 1850, 8JGTJR08M53K1: 1350} 
+		for (key in data){
+			if (key != 'Total'){
+				charts.working.push({
+					name: key,
+					y: data[key]/100,
+					drilldown: key.toLowerCase()
+				});
 
+				square.getCookieCount(key);
+			}
+		}
+		this.setupDrilldowns(data);
 	},
+	setupDrilldowns: function(scoutID, data){
+		var drilldownSeries = {
+			colorByPoint: true,
+			colors: [
+				chartOptions.color.gold,
+				chartOptions.color.green,
+				chartOptions.color.mint,
+				chartOptions.color.tomato
+			],
+			data: []
+		}
 
-	// {1Q5ZG47GZ44T1: 501}
+		for (key in data){
+			drilldownSeries.id = scoutID.toLowerCase();
+			drilldownSeries.data.push([key, data[key]]);
+		}
+		// console.log(charts.drilldowns);
+
+		charts.drilldowns.push(drilldownSeries);
+
+		charts.count++;
+
+		if (charts.count == charts.working.length){
+			this.leaderboard();
+		}
+		//init the leaderboard
+	},
 	leaderboard: function() {
 		// init the leaderboard 
 		var labels = ['Jane', 'Mary', 'Alice'];
 		var series = [{
-					name: 'total boxes sold',
+					name: 'total sales made',
 					color: chartOptions.color.mint,
-					data: [{
-						name: 'Jane', 
-						y: 304, 
-						drilldown: 'jane'
-					}, {
-						name: 'Mary', 
-						y: 205, 
-						drilldown: 'mary'
-					},{
-						name: 'Alice',
-						y: 34, 
-						drilldown: 'alice'}
-					]
+					data: charts.working
 				}];
-			
-		var dummyObj = {'bb': 304, 'cc': 205, 'dd': 333};
-
-		// for (key in dummyObj){
-		// 	labels.push(key);
-		// 	console.log(labels.indexOf(key));
-		// 	datasets[0]['data'].push(dummyObj[key]);
-		// }
 
 
 		var leaderchart = new Highcharts.Chart({
@@ -96,54 +142,12 @@ var charts = {
 	        },
 	        yAxis: {
 	            title: {
-	                text: 'Boxes sold'
+	                text: 'Sales ($USD)' 
 	            }
 	        },
 	        series: series, 
 			drilldown: {
-				series: [{
-					id: 'jane',
-					colorByPoint: true,
-					colors: [
-						chartOptions.color.gold,
-						chartOptions.color.green,
-						chartOptions.color.mint,
-						chartOptions.color.tomato
-					],
-					data: [
-						['Samoa', 55],
-						['Thin Mint', 22],
-						['Gingersnaps', 1]
-					]
-				}, {
-					id: 'mary',
-					colorByPoint: true,
-					colors: [
-						chartOptions.color.gold,
-						chartOptions.color.green,
-						chartOptions.color.mint,
-						chartOptions.color.tomato
-					],
-					data: [
-						['Samoa', 55],
-						['Thin Mint', 22],
-						['Gingersnaps', 1]
-					]					
-				}, {
-					id: 'alice', 
-					colorByPoint: true,
-					colors: [
-						chartOptions.color.gold,
-						chartOptions.color.green,
-						chartOptions.color.mint,
-						chartOptions.color.tomato
-					],
-					data: [
-						['Samoa', 55],
-						['Thin Mint', 22],
-						['Gingersnaps', 1]
-					]
-				}]
+				series: charts.drilldowns
 			}
 	    });
 
@@ -152,7 +156,7 @@ var charts = {
 	},
 
 	init: function() {
-		this.leaderboard();
+		// this.leaderboard();
 	}
 }
 
